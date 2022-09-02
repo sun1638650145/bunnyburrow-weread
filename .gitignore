@@ -1,0 +1,14 @@
+.DS_store
+.idea/
+# 忽略运行缓存.
+*.pyc
+__pycache__/
+# 忽略测试.
+.pytest_cache/
+# 忽略测试覆盖.
+htmlcov/
+.coverage
+# 忽略打包.
+build/
+dist/
+*.egg-info/

@@ -1,0 +1,7 @@
+# git hooks: 配置代码静态检查.
+# sh: pip install pre-commit; pre-commit install
+repos:
+  - repo: https://github.com/pycqa/flake8
+    rev: 5.0.4
+    hooks:
+      - id: flake8
