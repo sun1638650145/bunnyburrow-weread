@@ -1,0 +1,4 @@
+[flake8]
+per-file-ignores =
+    # 禁用`*/__init__.py`的 imported but unused
+    */__init__.py: F401

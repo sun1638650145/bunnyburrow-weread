@@ -1,9 +1,31 @@
+from asyncio import get_event_loop
+
 from weread import __version__
+from weread import download
 from weread import logger
+
+
+def download_command(name: str):
+    """下载命令, 根据图书名称下载原始的数据到本地.
+
+    Example:
+        ```shell
+        weread-cli download 怦然心动
+        ```
+
+    Args:
+        name: str, 图书的名称.
+    """
+    get_event_loop().run_until_complete(download(name))
 
 
 def help_command(level: str):
     """帮助命令, 用于查看帮助信息.
+
+    Example:
+        ```shell
+        weread-cli help
+        ```
 
     Args:
         level: {'error', 'info'},
@@ -15,6 +37,8 @@ Bunnyburrow Software Project(兔窝镇软件计划)
 Copyright 2022 Steve R. Sun. All rights reserved.
 -------------------------------------------------
 Usage:
+  weread-cli download <book_name>
+    download: 根据图书名称下载原始的数据到本地.
   weread-cli help
     help, --help, -h: 获取帮助信息.
   weread-cli version
@@ -27,5 +51,11 @@ Usage:
 
 
 def version_command():
-    """查看版本命令."""
+    """查看版本命令.
+
+    Example:
+        ```shell
+        weread-cli version
+        ```
+    """
     logger.info('微信读书ePub下载工具 ' + __version__)

@@ -9,3 +9,5 @@ import logging
 # 设置系统logger.
 logging.basicConfig(format='%(message)s', level=logging.INFO)
 logger = logging.getLogger()
+
+from weread.core import download  # noqa: E402

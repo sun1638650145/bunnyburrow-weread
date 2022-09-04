@@ -15,6 +15,12 @@ setup(
         'Topic :: Utilities',
     ],
     license='Non-free Software',
+    install_requires=[
+        'pillow==9.2.0',
+        'pyppeteer==1.0.2',
+        'pyzbar==0.1.9',
+        'qrcode==7.3.1',
+    ],
     python_requires='>=3.8',
     entry_points={
         'console_scripts': [
