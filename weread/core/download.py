@@ -1,7 +1,10 @@
 import base64
+import os
 import sys
+import time
 
 from io import BytesIO
+from pathlib import Path
 from typing import Tuple
 
 from PIL import Image
@@ -14,14 +17,14 @@ from qrcode import QRCode
 from weread import logger
 
 
-async def _launch_browser(headless: bool = False,
-                          incognito: bool = True) -> Tuple[Browser, Page]:
+async def _launch_browser(headless: bool,
+                          incognito: bool) -> Tuple[Browser, Page]:
     """启动浏览器并通过扫码登录账户.
 
     Args:
-        headless: bool, default=False,
+        headless: bool,
             是否设置无界面(headless)模式.
-        incognito: bool, default=True,
+        incognito: bool,
             是否设置无痕模式.
 
     Returns:
@@ -67,14 +70,60 @@ async def _launch_browser(headless: bool = False,
     return browser, page
 
 
-async def download(name: str):
+async def _change_chapter(page: Page, uid: int):
+    """在网页中切换章节.
+
+    Args:
+        page: pyppeteer.page.Page,
+            进行操作的页面.
+        uid: int,
+            章节的uid.
+    """
+    await page.Jeval('#routerView',
+                     '''(elm, uid) => {
+                        elm.__vue__.changeChapter({ chapterUid:uid })
+                     }''',
+                     uid)
+
+
+def _download_stylesheet_file(metadata: dict, styles_folder: os.PathLike):
+    """下载单个样式表文件, 样式表文件将保存成`章节名-uid.css`.
+
+    Args:
+        metadata: dict,
+            章节的元数据组成的字典.
+        styles_folder: os.PathLike,
+            样式表文件夹的路径.
+    """
+    if not os.path.exists(styles_folder):
+        os.makedirs(styles_folder)
+
+    # 获取当前章节的uid和样式表.
+    uid = metadata['currentChapter']['chapterUid']
+    style_sheets = metadata['chapterContentStyles']
+
+    css_filepath = f'{styles_folder}/chapter-{uid}.css'
+    with open(css_filepath, 'w') as fp:
+        fp.write(style_sheets)
+
+    logger.info(f'第{uid}章样式表下载完成.')
+
+
+async def download(name: str,
+                   headless: bool = False,
+                   incognito: bool = True):
     """根据图书名称下载原始的数据到本地.
 
     Args:
-        name: str, 图书的名称.
+        name: str,
+            图书的名称.
+        headless: bool, default=False,
+            是否为浏览器设置无界面(headless)模式.
+        incognito: bool, default=True,
+            是否为浏览器设置无痕模式.
     """
     # 启动浏览器, 登录账户.
-    browser, page = await _launch_browser(headless=False, incognito=True)
+    browser, page = await _launch_browser(headless, incognito)
 
     # 进入我的书架, 提取图书的URL.
     await page.click('.bookshelf_preview_header_link')
@@ -91,5 +140,32 @@ async def download(name: str):
     if not book_url:
         logger.error(f'没有找到你想要下载的《{name}》, 请检查你是否拥有这本书或书名是否正确!')
         sys.exit(1)
+
+    # 获取图书的元数据.
+    book_metadata = await page.Jeval('#app', '''(elm) => {
+        return elm.__vue__.$store.state.reader
+    }''')
+
+    # 创建保存原始数据的文件夹路径.
+    raw_folder = Path(book_metadata['bookInfo']['title'] + '.raw/')
+    # images_folder = Path(os.path.join(raw_folder, 'Images'))
+    styles_folder = Path(os.path.join(raw_folder, 'Styles'))
+    # text_folder = Path(os.path.join(raw_folder, 'Text'))
+
+    # 遍历每章下载原始数据(包括图片, 样式表和文本).
+    chapter_infos = book_metadata['chapterInfos']
+    for chapter in chapter_infos:  # 章节id不一定从1开始.
+        await _change_chapter(page, chapter['chapterUid'])
+        time.sleep(3)  # 切换章节后设置延时, 模拟人类操作.
+
+        # 获取章节的元数据.
+        chapter_metadata = await page.Jeval('#app', '''(elm) => {
+            return elm.__vue__.$store.state.reader
+        }''')
+
+        # 下载当前的章节的样式表.
+        _download_stylesheet_file(chapter_metadata, styles_folder)
+
+        logger.info('-' * 50)
 
     await browser.close()
