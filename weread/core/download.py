@@ -70,22 +70,6 @@ async def _launch_browser(headless: bool,
     return browser, page
 
 
-async def _change_chapter(page: Page, uid: int):
-    """在网页中切换章节.
-
-    Args:
-        page: pyppeteer.page.Page,
-            进行操作的页面.
-        uid: int,
-            章节的uid.
-    """
-    await page.Jeval('#routerView',
-                     '''(elm, uid) => {
-                        elm.__vue__.changeChapter({ chapterUid:uid })
-                     }''',
-                     uid)
-
-
 def _download_stylesheet_file(metadata: dict, styles_folder: os.PathLike):
     """下载单个样式表文件, 样式表文件将保存成`章节名-uid.css`.
 
@@ -155,8 +139,13 @@ async def download(name: str,
     # 遍历每章下载原始数据(包括图片, 样式表和文本).
     chapter_infos = book_metadata['chapterInfos']
     for chapter in chapter_infos:  # 章节id不一定从1开始.
-        await _change_chapter(page, chapter['chapterUid'])
-        time.sleep(3)  # 切换章节后设置延时, 模拟人类操作.
+        # 在网页中切换章节, 并设置延时, 模拟人类操作.
+        await page.Jeval('#routerView',
+                         '''(elm, uid) => {
+                            elm.__vue__.changeChapter({ chapterUid:uid })
+                         }''',
+                         chapter['chapterUid'])
+        time.sleep(3)
 
         # 获取章节的元数据.
         chapter_metadata = await page.Jeval('#app', '''(elm) => {
