@@ -17,6 +17,23 @@ from qrcode import QRCode
 from weread import logger
 
 
+def _generate_qrcode(base64_str: str):
+    """生成登录二维码.
+
+    Args:
+        base64_str: str,
+            使用base64编码的二维码字符串.
+    """
+    image = base64.b64decode(base64_str)
+    image = Image.open(BytesIO(image))  # 输入解码图片的字节流.
+
+    # 使用pybar提取登录URL, qrcode生成二维码.
+    login_url = pyzbar.decode(image)[0].data.decode()
+    qrcode = QRCode()
+    qrcode.add_data(data=login_url)
+    qrcode.print_ascii(invert=False)
+
+
 async def _launch_browser(headless: bool,
                           incognito: bool) -> Tuple[Browser, Page]:
     """启动浏览器并通过扫码登录账户.
@@ -50,16 +67,10 @@ async def _launch_browser(headless: bool,
             image_base64 = await (await element[0].getProperty('src')).jsonValue()  # noqa: E501
             image_base64 = image_base64[22:]  # `data:image/png;base64,`移除头部.
 
-            image = base64.b64decode(image_base64)
-            image = Image.open(BytesIO(image))  # 输入解码图片的字节流.
-
-            # 使用pybar提取登录URL, qrcode生成二维码.
-            login_url = pyzbar.decode(image)[0].data.decode()
-            qr_code = QRCode()
-            qr_code.add_data(data=login_url)
-            qr_code.print_ascii(invert=False)
+            # 生成二维码.
+            _generate_qrcode(image_base64)
         except IndexError:
-            logger.error('二维码生成失败, 请重新启动weread-cli.')
+            logger.error('二维码生成失败, 请重新启动.')
             sys.exit(1)
 
     # 使用头像的导航栏(下拉菜单)判断登录成功.
@@ -95,7 +106,8 @@ def _download_stylesheet_file(metadata: dict, styles_folder: os.PathLike):
 
 async def download(name: str,
                    headless: bool = False,
-                   incognito: bool = True):
+                   incognito: bool = True,
+                   delay: int = 3):
     """根据图书名称下载原始的数据到本地.
 
     Args:
@@ -105,6 +117,8 @@ async def download(name: str,
             是否为浏览器设置无界面(headless)模式.
         incognito: bool, default=True,
             是否为浏览器设置无痕模式.
+        delay: int, default=3,
+            设置延时, 用于模拟人类操作.
     """
     # 启动浏览器, 登录账户.
     browser, page = await _launch_browser(headless, incognito)
@@ -145,7 +159,7 @@ async def download(name: str,
                             elm.__vue__.changeChapter({ chapterUid:uid })
                          }''',
                          chapter['chapterUid'])
-        time.sleep(3)
+        time.sleep(delay)
 
         # 获取章节的元数据.
         chapter_metadata = await page.Jeval('#app', '''(elm) => {
