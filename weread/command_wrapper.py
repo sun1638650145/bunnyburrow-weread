@@ -1,4 +1,4 @@
-from asyncio import get_event_loop
+from asyncio import run
 
 from weread import __version__
 from weread import download
@@ -16,7 +16,7 @@ def download_command(name: str):
     Args:
         name: str, 图书的名称.
     """
-    get_event_loop().run_until_complete(download(name))
+    run(download(name))
 
 
 def help_command(level: str):

@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 import sys
 import time
@@ -81,27 +82,46 @@ async def _launch_browser(headless: bool,
     return browser, page
 
 
-def _download_stylesheet_file(metadata: dict, styles_folder: os.PathLike):
-    """下载单个样式表文件, 样式表文件将保存成`章节名-uid.css`.
+def _download_html_css_file(metadata: dict,
+                            raw_folder: os.PathLike):
+    """下载当前章节的文本和对应样式表.
+     文本文件将保存成`章节名-uid.html`, 样式表文件将保存成`章节名-uid.css`.
 
     Args:
         metadata: dict,
             章节的元数据组成的字典.
-        styles_folder: os.PathLike,
-            样式表文件夹的路径.
+        raw_folder: os.PathLike,
+            图书数据保存的目录.
     """
-    if not os.path.exists(styles_folder):
-        os.makedirs(styles_folder)
+    styles_folder = Path(os.path.join(raw_folder, 'Styles'))
+    text_folder = Path(os.path.join(raw_folder, 'Text'))
 
-    # 获取当前章节的uid和样式表.
+    # 获取当前章节的uid, 文本和对应样式表.
     uid = metadata['currentChapter']['chapterUid']
-    style_sheets = metadata['chapterContentStyles']
+    html = metadata['chapterContentHtml'][0]
+    css = metadata['chapterContentStyles']
 
-    css_filepath = f'{styles_folder}/chapter-{uid}.css'
-    with open(css_filepath, 'w') as fp:
-        fp.write(style_sheets)
+    def _write_to_file(folder: os.PathLike, content: str, file_type: str):
+        """往文件内写入数据.
 
-    logger.info(f'第{uid}章样式表下载完成.')
+        Args:
+            folder: os.PathLike,
+                图书数据保存的目录.
+            content: str,
+                保存的内容.
+            file_type: {'html', 'css'},
+                保存的文件类型.
+        """
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+        with open(f'{folder}/chapter-{uid}.{file_type}', 'w') as fp:
+            fp.write(content)
+
+    _write_to_file(text_folder, html, 'html')
+    _write_to_file(styles_folder, css, 'css')
+
+    logger.info(f'第{uid}章下载完成.')
 
 
 async def download(name: str,
@@ -147,13 +167,11 @@ async def download(name: str,
     # 创建保存原始数据的文件夹路径.
     raw_folder = Path(book_metadata['bookInfo']['title'] + '.raw/')
     # images_folder = Path(os.path.join(raw_folder, 'Images'))
-    styles_folder = Path(os.path.join(raw_folder, 'Styles'))
-    # text_folder = Path(os.path.join(raw_folder, 'Text'))
 
     # 遍历每章下载原始数据(包括图片, 样式表和文本).
     chapter_infos = book_metadata['chapterInfos']
-    for chapter in chapter_infos:  # 章节id不一定从1开始.
-        # 在网页中切换章节, 并设置延时, 模拟人类操作.
+    for chapter in chapter_infos:  # 注意章节id不一定从1开始!
+        # 在网页中切换章节, 并设置延时模拟人类操作.
         await page.Jeval('#routerView',
                          '''(elm, uid) => {
                             elm.__vue__.changeChapter({ chapterUid:uid })
@@ -166,9 +184,21 @@ async def download(name: str,
             return elm.__vue__.$store.state.reader
         }''')
 
-        # 下载当前的章节的样式表.
-        _download_stylesheet_file(chapter_metadata, styles_folder)
+        # 下载当前章节的文本和对应样式表.
+        _download_html_css_file(chapter_metadata, raw_folder)
 
         logger.info('-' * 50)
+
+    # 保存书籍的元信息.
+    book_info = book_metadata['bookInfo']
+    book_info_json = json.dumps(book_info)
+    with open(os.path.join(raw_folder, 'content.json'), 'w') as fp:
+        fp.write(book_info_json)
+
+    # 保存书籍的章节描述信息.
+    chapter_infos = book_metadata['chapterInfos']
+    chapter_infos_json = json.dumps(chapter_infos)
+    with open(os.path.join(raw_folder, 'toc.json'), 'w') as fp:
+        fp.write(chapter_infos_json)
 
     await browser.close()
