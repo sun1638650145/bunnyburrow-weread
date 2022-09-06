@@ -21,6 +21,7 @@ setup(
     ],
     license='Non-free Software',
     install_requires=[
+        'beautifulsoup4==4.11.1',
         'pyppeteer==1.0.2',
     ],
     entry_points={

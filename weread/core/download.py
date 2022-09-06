@@ -7,7 +7,9 @@ import time
 from io import BytesIO
 from pathlib import Path
 from typing import Tuple
+from urllib.request import urlretrieve
 
+from bs4 import BeautifulSoup
 from PIL import Image
 from pyppeteer import launch
 from pyppeteer.browser import Browser
@@ -82,9 +84,10 @@ async def _launch_browser(headless: bool,
     return browser, page
 
 
-def _download_html_css_file(metadata: dict,
-                            raw_folder: os.PathLike):
-    """下载当前章节的文本和对应样式表.
+# Download data for a chapter.
+def _download_for_chapter(metadata: dict, raw_folder: os.PathLike):
+    """下载单个章节的数据.
+    分别将图片, 文本和样式表保存到`Images`, `Styles`和`Text`, 图片使用成原始的名称,
      文本文件将保存成`章节名-uid.html`, 样式表文件将保存成`章节名-uid.css`.
 
     Args:
@@ -93,41 +96,37 @@ def _download_html_css_file(metadata: dict,
         raw_folder: os.PathLike,
             图书数据保存的目录.
     """
+    images_folder = Path(os.path.join(raw_folder, 'Images'))
     styles_folder = Path(os.path.join(raw_folder, 'Styles'))
     text_folder = Path(os.path.join(raw_folder, 'Text'))
 
-    # 获取当前章节的uid, 文本和对应样式表.
+    # 获取当前章节的uid.
     uid = metadata['currentChapter']['chapterUid']
-    html = metadata['chapterContentHtml'][0]
+
+    # 获取当前章节的对应样式表.
     css = metadata['chapterContentStyles']
+    with open(os.path.join(styles_folder, f'chapter-{uid}.css'), 'w') as fp:
+        fp.write(css)
 
-    def _write_to_file(folder: os.PathLike, content: str, file_type: str):
-        """往文件内写入数据.
+    # 获取当前章节的对应文本.
+    html = metadata['chapterContentHtml'][0]
+    with open(os.path.join(text_folder, f'chapter-{uid}.html'), 'w') as fp:
+        fp.write(html)
 
-        Args:
-            folder: os.PathLike,
-                图书数据保存的目录.
-            content: str,
-                保存的内容.
-            file_type: {'html', 'css'},
-                保存的文件类型.
-        """
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
-        with open(f'{folder}/chapter-{uid}.{file_type}', 'w') as fp:
-            fp.write(content)
-
-    _write_to_file(text_folder, html, 'html')
-    _write_to_file(styles_folder, css, 'css')
-
-    logger.info(f'第{uid}章下载完成.')
+    # 获取当前章节的对应图片, 遍历找到全部图片并保存.
+    images = BeautifulSoup(html, features='lxml').findAll('img')
+    for image in images:
+        image_url = image['data-src']
+        image_path = image_url.split('/')[-1] + '.jpg'
+        image_path = os.path.join(images_folder, image_path)
+        urlretrieve(url=image_url, filename=image_path)
 
 
 async def download(name: str,
                    headless: bool = False,
                    incognito: bool = True,
-                   delay: int = 3):
+                   delay: int = 3,
+                   info: bool = False) -> Path:
     """根据图书名称下载原始的数据到本地.
 
     Args:
@@ -139,6 +138,11 @@ async def download(name: str,
             是否为浏览器设置无痕模式.
         delay: int, default=3,
             设置延时, 用于模拟人类操作.
+        info: bool, default=False,
+            是否输出提示信息.
+
+    Return:
+        原始数据保存文件夹的绝对路径.
     """
     # 启动浏览器, 登录账户.
     browser, page = await _launch_browser(headless, incognito)
@@ -166,11 +170,14 @@ async def download(name: str,
 
     # 创建保存原始数据的文件夹路径.
     raw_folder = Path(book_metadata['bookInfo']['title'] + '.raw/')
-    # images_folder = Path(os.path.join(raw_folder, 'Images'))
+    for folder in ['Images', 'Styles', 'Text']:
+        folder = Path(os.path.join(raw_folder, folder))
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
     # 遍历每章下载原始数据(包括图片, 样式表和文本).
     chapter_infos = book_metadata['chapterInfos']
-    for chapter in chapter_infos:  # 注意章节id不一定从1开始!
+    for i, chapter in enumerate(chapter_infos):
         # 在网页中切换章节, 并设置延时模拟人类操作.
         await page.Jeval('#routerView',
                          '''(elm, uid) => {
@@ -184,10 +191,10 @@ async def download(name: str,
             return elm.__vue__.$store.state.reader
         }''')
 
-        # 下载当前章节的文本和对应样式表.
-        _download_html_css_file(chapter_metadata, raw_folder)
+        # 下载当前章节的数据.
+        _download_for_chapter(chapter_metadata, raw_folder)
 
-        logger.info('-' * 50)
+        logger.info(f'第{i + 1}章下载完成.')
 
     # 保存书籍的元信息.
     book_info = book_metadata['bookInfo']
@@ -201,4 +208,15 @@ async def download(name: str,
     with open(os.path.join(raw_folder, 'toc.json'), 'w') as fp:
         fp.write(chapter_infos_json)
 
+    # 保存书籍的封面图片.
+    coverpage_url = book_info['cover']
+    coverpage_url = coverpage_url.replace('s_', 'o_')  # 修正使用缩略图的问题.
+    coverpage_path = Path(os.path.join(raw_folder, 'Images/coverpage.jpg'))
+    urlretrieve(url=coverpage_url, filename=coverpage_path)
+
     await browser.close()
+
+    if info:
+        logger.info('成功下载原始数据到本地:)')
+
+    return raw_folder.absolute()

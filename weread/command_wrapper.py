@@ -16,7 +16,7 @@ def download_command(name: str):
     Args:
         name: str, 图书的名称.
     """
-    run(download(name))
+    run(download(name, info=True))
 
 
 def help_command(level: str):
