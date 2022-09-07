@@ -1,13 +1,14 @@
 import base64
 import json
-import os
 import sys
 import time
 
 from io import BytesIO
 from pathlib import Path
+from tempfile import mkstemp
 from typing import Tuple
 from urllib.request import urlretrieve
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from bs4 import BeautifulSoup
 from PIL import Image
@@ -85,47 +86,41 @@ async def _launch_browser(headless: bool,
 
 
 # Download data for a chapter.
-def _download_for_chapter(metadata: dict, raw_folder: os.PathLike):
-    """下载单个章节的数据.
-    分别将图片, 文本和样式表保存到`Images`, `Styles`和`Text`, 图片使用成原始的名称,
-     文本文件将保存成`章节名-uid.html`, 样式表文件将保存成`章节名-uid.css`.
+def _download_for_chapter(metadata: dict, rdata_file: ZipFile):
+    """下载单个章节的数据, 图片将保存成`Images/原始名称.jpg`,
+     文本文件将保存成`Text/章节名-uid.html`, Styles/样式表文件将保存成`Styles/章节名-uid.css`.
 
     Args:
         metadata: dict,
             章节的元数据组成的字典.
-        raw_folder: os.PathLike,
-            图书数据保存的目录.
+        rdata_file: ZipFile,
+            原始数据文件.
     """
-    images_folder = Path(os.path.join(raw_folder, 'Images'))
-    styles_folder = Path(os.path.join(raw_folder, 'Styles'))
-    text_folder = Path(os.path.join(raw_folder, 'Text'))
-
     # 获取当前章节的uid.
     uid = metadata['currentChapter']['chapterUid']
 
     # 获取当前章节的对应样式表.
     css = metadata['chapterContentStyles']
-    with open(os.path.join(styles_folder, f'chapter-{uid}.css'), 'w') as fp:
-        fp.write(css)
+    rdata_file.writestr(f'Styles/chapter-{uid}.css', css)
 
     # 获取当前章节的对应文本.
     html = metadata['chapterContentHtml'][0]
-    with open(os.path.join(text_folder, f'chapter-{uid}.html'), 'w') as fp:
-        fp.write(html)
+    rdata_file.writestr(f'Text/chapter-{uid}.html', html)
 
     # 获取当前章节的对应图片, 遍历找到全部图片并保存.
     images = BeautifulSoup(html, features='lxml').findAll('img')
     for image in images:
         image_url = image['data-src']
-        image_path = image_url.split('/')[-1] + '.jpg'
-        image_path = os.path.join(images_folder, image_path)
-        urlretrieve(url=image_url, filename=image_path)
+        image_name = 'Images/' + image_url.split('/')[-1] + '.jpg'
+        _, temp_image_path = mkstemp()
+        urlretrieve(url=image_url, filename=temp_image_path)
+        rdata_file.write(temp_image_path, image_name)
 
 
 async def download(name: str,
                    headless: bool = False,
                    incognito: bool = True,
-                   delay: int = 2,
+                   delay: float = 2.5,
                    verbose: bool = False,
                    info: bool = False) -> Path:
     """根据图书名称下载原始的数据到本地.
@@ -137,15 +132,15 @@ async def download(name: str,
             是否为浏览器设置无界面(headless)模式.
         incognito: bool, default=True,
             是否为浏览器设置无痕模式.
-        delay: int, default=2,
-            设置延时, 用于模拟人类操作.
+        delay: float, default=2.5,
+            设置延时, 用于等待图片加载并模拟人类操作.
         verbose: bool, default=False,
             是否展示下载过程的详细信息.
         info: bool, default=False,
             是否输出提示信息.
 
     Return:
-        原始数据保存文件夹的绝对路径.
+        原始数据文件(使用zip打包压缩)的绝对路径.
     """
     # 启动浏览器, 登录账户.
     browser, page = await _launch_browser(headless, incognito)
@@ -171,22 +166,20 @@ async def download(name: str,
         return elm.__vue__.$store.state.reader
     }''')
 
-    # 创建保存原始数据的文件夹路径.
-    raw_folder = Path(book_metadata['bookInfo']['title'] + '.raw/')
-    for folder in ['Images', 'Styles', 'Text']:
-        folder = Path(os.path.join(raw_folder, folder))
-        os.makedirs(folder, exist_ok=True)
+    # 创建保存原始数据文件.
+    rdata_file_path = book_metadata['bookInfo']['title'] + '.rdata.zip'
+    rdata_file = ZipFile(rdata_file_path, 'w', ZIP_DEFLATED)
 
     # 遍历每章下载原始数据(包括图片, 样式表和文本).
     chapter_infos = book_metadata['chapterInfos']
     for i, chapter in enumerate(chapter_infos):
-        # 在网页中切换章节, 并设置延时模拟人类操作.
+        # 在网页中切换章节.
         await page.Jeval('#routerView',
                          '''(elm, uid) => {
                             elm.__vue__.changeChapter({ chapterUid:uid })
                          }''',
                          chapter['chapterUid'])
-        time.sleep(delay)
+        time.sleep(delay)  # 用于等待图片加载并模拟人类操作.
 
         # 获取章节的元数据.
         chapter_metadata = await page.Jeval('#app', '''(elm) => {
@@ -194,7 +187,7 @@ async def download(name: str,
         }''')
 
         # 下载当前章节的数据.
-        _download_for_chapter(chapter_metadata, raw_folder)
+        _download_for_chapter(chapter_metadata, rdata_file)
 
         if verbose:
             logger.info(f'第{i + 1}章下载完成.')
@@ -205,24 +198,23 @@ async def download(name: str,
     # 保存书籍的元信息.
     book_info = book_metadata['bookInfo']
     book_info_json = json.dumps(book_info)
-    with open(os.path.join(raw_folder, 'content.json'), 'w') as fp:
-        fp.write(book_info_json)
+    rdata_file.writestr('content.json', book_info_json)
 
     # 保存书籍的章节描述信息.
     chapter_infos = book_metadata['chapterInfos']
     chapter_infos_json = json.dumps(chapter_infos)
-    with open(os.path.join(raw_folder, 'toc.json'), 'w') as fp:
-        fp.write(chapter_infos_json)
+    rdata_file.writestr('toc.json', chapter_infos_json)
 
     # 保存书籍的封面图片.
     coverpage_url = book_info['cover']
     coverpage_url = coverpage_url.replace('s_', 'o_')  # 修正使用缩略图的问题.
-    coverpage_path = Path(os.path.join(raw_folder, 'Images/coverpage.jpg'))
-    urlretrieve(url=coverpage_url, filename=coverpage_path)
+    _, temp_coverpage_path = mkstemp()
+    urlretrieve(url=coverpage_url, filename=temp_coverpage_path)
+    rdata_file.write(temp_coverpage_path, 'Images/coverpage.jpg')
 
     await browser.close()
 
     if info:
         logger.info('成功下载原始数据到本地:)')
 
-    return raw_folder.absolute()
+    return Path(rdata_file_path).absolute()
