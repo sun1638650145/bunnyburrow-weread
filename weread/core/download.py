@@ -77,7 +77,7 @@ async def _launch_browser(headless: bool,
             sys.exit(1)
 
     # 使用头像的导航栏(下拉菜单)判断登录成功.
-    await page.waitForSelector('.wr_avatar.navBar_avatar', timeout=0)
+    await page.waitForSelector('.wr_avatar.navBar_avatar')
 
     logger.info('登录成功:)')
 
@@ -125,7 +125,8 @@ def _download_for_chapter(metadata: dict, raw_folder: os.PathLike):
 async def download(name: str,
                    headless: bool = False,
                    incognito: bool = True,
-                   delay: int = 3,
+                   delay: int = 2,
+                   verbose: bool = False,
                    info: bool = False) -> Path:
     """根据图书名称下载原始的数据到本地.
 
@@ -136,8 +137,10 @@ async def download(name: str,
             是否为浏览器设置无界面(headless)模式.
         incognito: bool, default=True,
             是否为浏览器设置无痕模式.
-        delay: int, default=3,
+        delay: int, default=2,
             设置延时, 用于模拟人类操作.
+        verbose: bool, default=False,
+            是否展示下载过程的详细信息.
         info: bool, default=False,
             是否输出提示信息.
 
@@ -172,8 +175,7 @@ async def download(name: str,
     raw_folder = Path(book_metadata['bookInfo']['title'] + '.raw/')
     for folder in ['Images', 'Styles', 'Text']:
         folder = Path(os.path.join(raw_folder, folder))
-        if not os.path.exists(folder):
-            os.makedirs(folder)
+        os.makedirs(folder, exist_ok=True)
 
     # 遍历每章下载原始数据(包括图片, 样式表和文本).
     chapter_infos = book_metadata['chapterInfos']
@@ -194,7 +196,11 @@ async def download(name: str,
         # 下载当前章节的数据.
         _download_for_chapter(chapter_metadata, raw_folder)
 
-        logger.info(f'第{i + 1}章下载完成.')
+        if verbose:
+            logger.info(f'第{i + 1}章下载完成.')
+
+    if verbose:
+        logger.info('-' * 50)
 
     # 保存书籍的元信息.
     book_info = book_metadata['bookInfo']

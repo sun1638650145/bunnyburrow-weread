@@ -5,7 +5,7 @@ from weread import download
 from weread import logger
 
 
-def download_command(name: str):
+def download_command(name: str, verbose: bool):
     """下载命令, 根据图书名称下载原始的数据到本地.
 
     Example:
@@ -15,8 +15,10 @@ def download_command(name: str):
 
     Args:
         name: str, 图书的名称.
+        verbose: bool,
+            是否展示下载过程的详细信息.
     """
-    run(download(name, info=True))
+    run(download(name, verbose=verbose, info=True))
 
 
 def help_command(level: str):
@@ -37,8 +39,10 @@ Bunnyburrow Software Project(兔窝镇软件计划)
 Copyright 2022 Steve R. Sun. All rights reserved.
 -------------------------------------------------
 Usage:
-  weread-cli download <book_name>
+  weread-cli download [option] <book_name>
     download: 根据图书名称下载原始的数据到本地.
+      Option:
+        --verbose, -v: 展示下载过程的详细信息.
   weread-cli help
     help, --help, -h: 获取帮助信息.
   weread-cli version

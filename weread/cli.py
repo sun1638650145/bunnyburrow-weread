@@ -29,7 +29,20 @@ def _parse_args(args: List) -> Dict:
         metadata = {}
         try:
             if args[0] == 'download':
-                metadata.update({'download': args[1]})
+                if args[1] in ('--verbose', '-v'):
+                    metadata.update({
+                        'download': {
+                            'name': args[2],
+                            'verbose': True
+                        }
+                    })
+                else:
+                    metadata.update({
+                        'download': {
+                            'name': args[1],
+                            'verbose': False
+                        }
+                    })
             elif args[0] in ('help', '--help', '-h'):
                 metadata.update({'help': True})
             elif args[0] in ('version', '--version', '-v'):
@@ -48,7 +61,7 @@ def run():
     meta_data = _parse_args(sys.argv)
     for command, params in meta_data.items():
         if command == 'download':
-            download_command(params)
+            download_command(params['name'], params['verbose'])
         elif command == 'help':
             help_command('info')
         elif command == 'version':
