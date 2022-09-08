@@ -1,7 +1,7 @@
 from asyncio import run
 
 from weread import __version__
-from weread import download
+from weread import download, generate
 from weread import logger
 
 
@@ -19,6 +19,40 @@ def download_command(name: str, verbose: bool):
             是否展示下载过程的详细信息.
     """
     run(download(name, verbose=verbose, info=True))
+
+
+def generate_command(rdata_file: str, verbose: bool):
+    """生成ePub文件命令, 根据原始数据文件生成ePub文件.
+
+    生成的ePub文件参照这个目录创建:
+    ePub 3.x
+        |
+        |-- mimetype (纯文本`application/epub+zip`)
+        |-- META-INF
+            |
+            |-- container.xml (用于指向元数据文件的位置)
+            |-- com.apple.ibooks.display-options.xml (Apple Books的拓展)
+        |
+        |-- OEBPS
+            |
+            |-- content.opf (图书的元数据出版信息)
+            |-- toc.ncx (章节的描述信息)
+            |-- Styles (样式表css)
+            |-- Text (章节内容xhtml)
+            |-- Images (图片文件)
+
+    Example:
+        ```shell
+        weread-cli generate 怦然心动.rdata.zip
+        ```
+
+    Args:
+        rdata_file: str or os.PathLike,
+            原始数据文件.
+        verbose: bool,
+            是否展示生成ePub文件的详细信息.
+    """
+    generate(rdata_file, verbose)
 
 
 def help_command(level: str):
@@ -43,6 +77,10 @@ Usage:
     download: 根据图书名称下载原始的数据到本地.
       Option:
         --verbose, -v: 展示下载过程的详细信息.
+  weread-cli generate [option] <rdata_file>
+    generate: 根据原始数据文件生成ePub文件.
+      Option:
+        --verbose, -v: 展示生成ePub文件的详细信息.
   weread-cli help
     help, --help, -h: 获取帮助信息.
   weread-cli version

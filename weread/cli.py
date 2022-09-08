@@ -5,6 +5,7 @@ from weread import __version__
 from weread import logger
 from weread.command_wrapper import (
     download_command,
+    generate_command,
     help_command,
     version_command
 )
@@ -43,6 +44,21 @@ def _parse_args(args: List) -> Dict:
                             'verbose': False
                         }
                     })
+            elif args[0] == 'generate':
+                if args[1] in ('--verbose', '-v'):
+                    metadata.update({
+                        'generate': {
+                            'rdata_file': args[2],
+                            'verbose': True
+                        }
+                    })
+                else:
+                    metadata.update({
+                        'download': {
+                            'rdata_file': args[1],
+                            'verbose': False
+                        }
+                    })
             elif args[0] in ('help', '--help', '-h'):
                 metadata.update({'help': True})
             elif args[0] in ('version', '--version', '-v'):
@@ -62,6 +78,8 @@ def run():
     for command, params in meta_data.items():
         if command == 'download':
             download_command(params['name'], params['verbose'])
+        elif command == 'generate':
+            generate_command(params['rdata_file'], params['verbose'])
         elif command == 'help':
             help_command('info')
         elif command == 'version':

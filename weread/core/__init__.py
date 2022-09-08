@@ -1,1 +1,2 @@
 from weread.core.download import download
+from weread.core.generate import generate

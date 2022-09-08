@@ -10,4 +10,5 @@ import logging
 logging.basicConfig(format='%(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-from weread.core import download  # noqa: E402
+from weread.core import download
+from weread.core import generate

@@ -1,4 +1,10 @@
 [flake8]
+exclude =
+    # 忽略build文件夹.
+    build
+
 per-file-ignores =
     # 禁用`*/__init__.py`的 imported but unused
     */__init__.py: F401
+    # 禁用`weread/__init__.py`的 module level import not at top of file
+    weread/__init__.py: F401, E402

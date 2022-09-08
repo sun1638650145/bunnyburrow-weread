@@ -140,7 +140,7 @@ async def download(name: str,
             是否输出提示信息.
 
     Return:
-        原始数据文件(使用zip打包压缩)的绝对路径.
+        原始数据文件的绝对路径.
     """
     # 启动浏览器, 登录账户.
     browser, page = await _launch_browser(headless, incognito)
