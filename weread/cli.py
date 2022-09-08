@@ -54,7 +54,7 @@ def _parse_args(args: List) -> Dict:
                     })
                 else:
                     metadata.update({
-                        'download': {
+                        'generate': {
                             'rdata_file': args[1],
                             'verbose': False
                         }
