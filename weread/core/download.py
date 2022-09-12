@@ -85,7 +85,6 @@ async def _launch_browser(headless: bool,
     return browser, page
 
 
-# Download data for a chapter.
 def _download_for_chapter(metadata: dict, rdata_file: ZipFile):
     """下载单个章节的数据, 图片将保存成`Images/原始名称.jpg`,
      文本文件将保存成`Text/章节名-uid.html`, Styles/样式表文件将保存成`Styles/章节名-uid.css`.
