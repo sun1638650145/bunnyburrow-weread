@@ -334,6 +334,14 @@ def _generate_oebps(rdata_file: Union[str, os.PathLike], epub_file: ZipFile):
                                     book_info_json['title'])
     epub_file.writestr('OEBPS/toc.ncx', toc_ncx_str)
 
+    # 写入图片和样式表文件.
+    for file in file_list:
+        if (file.filename.startswith('Images/')
+                or file.filename.startswith('Styles/')):
+            file_bytes = ZipFile(rdata_file).read(file.filename)
+            epub_file.writestr(os.path.join('OEBPS/', file.filename),
+                               file_bytes)
+
 
 def generate(rdata_file: Union[str, os.PathLike], verbose: bool = False):
     """根据原始数据文件生成ePub文件.
@@ -351,9 +359,9 @@ def generate(rdata_file: Union[str, os.PathLike], verbose: bool = False):
             |
             |-- content.opf (图书的元数据)
             |-- toc.ncx (章节的描述信息)
+            |-- Images (图片文件)
             |-- Styles (样式表css)
             |-- Text (章节内容xhtml)
-            |-- Images (图片文件)
 
     References:
         - [发布ePub文档](http://www.theheratik.net/books/tech-epub/)
