@@ -308,8 +308,8 @@ def _processing_html(html: bytes) -> BeautifulSoup:
         tags = node.find_all()
         index = 0
         for i, tag in enumerate(tags):
-            # 重置索引.
-            if tag.name != 'span' or tag.has_attr('data-wr-footernote'):  # 在注释也需要重置索引.  # noqa: E501
+            # 重置索引; 重置索引的两种情况: 1.不是span 2.span上有属性.
+            if tag.name != 'span' or len(tag.attrs) > 0:
                 index = i + 1
             if index != i and tag.name == 'span':  # 只删除不是索引处的<span>.
                 if tag.string:  # 空<span>是注释, 需要保留.
