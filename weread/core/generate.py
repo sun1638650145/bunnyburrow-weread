@@ -284,6 +284,99 @@ def _generate_toc_ncx(chapter_infos: List[Dict],
     return toc_ncx.prettify()
 
 
+def _processing_html(html: bytes) -> BeautifulSoup:
+    """处理html文本, 移除和合并无意义标签.
+
+    Args:
+        html: bytes, 原始的html.
+
+    Return:
+        处理完成的html.
+    """
+    html = BeautifulSoup(html, features='lxml')
+
+    # 移除无意义标签.
+    remove_attrs = ['data-wr-bd', 'data-wr-co', 'data-wr-id']
+    for node in html.find_all('div'):
+        for attr in remove_attrs:
+            del node[attr]  # 删除<div>上的属性.
+            for tag in node.find_all():
+                del tag[attr]
+
+    # 删除多余的<span>.
+    for node in html.find_all(['h1', ['p']]):
+        tags = node.find_all()
+        index = 0
+        for i, tag in enumerate(tags):
+            # 重置索引.
+            if tag.name != 'span' or tag.has_attr('data-wr-footernote'):  # 在注释也需要重置索引.  # noqa: E501
+                index = i + 1
+            if index != i and tag.name == 'span':  # 只删除不是索引处的<span>.
+                if tag.string:  # 空<span>是注释, 需要保留.
+                    tags[index].string += tag.string
+                    tag.decompose()
+
+    # 处理图片链接.
+    for image_node in html.find_all('img'):
+        image_url = image_node.attrs['data-src']
+        image_path = '../Images/' + image_url.split('/')[-1] + '.jpg'
+
+        # 更新为新的地址并删除data-src属性.
+        image_node.attrs['src'] = image_path
+        del image_node.attrs['data-src']
+
+    return html
+
+
+def _generate_chapter_xhtml(chapter_content_html: bytes,
+                            chapter_index: str) -> str:
+    """基于原始章节数据的html在OEBPS/Text/文件夹下创建标准xhtml文件.
+
+    Args:
+        chapter_content_html: bytes,
+            原始章节内容.
+        chapter_index: str,
+            章节索引.
+
+    Return:
+        章节文件内容的xhtml文本.
+    """
+    # 处理原始章节数据的html.
+    chapter_content_html = _processing_html(chapter_content_html)
+
+    xhtml = BeautifulSoup(features='xml')
+    html = xhtml.new_tag('html', attrs={
+        'xmlns': 'http://www.w3.org/1999/xhtml'
+    })
+    xhtml.append(html)
+
+    # 创建<head>元素.
+    head = xhtml.new_tag('head')
+    html.append(head)
+    meta = xhtml.new_tag('meta', attrs={'charset': 'UTF-8'})
+    head.append(meta)
+    title = xhtml.new_tag('title')
+    title.string = 'Document'
+    head.append(title)
+    link = xhtml.new_tag('link', attrs={
+        'rel': 'stylesheet',
+        'href': f'../Styles/chapter-{chapter_index}.css'
+    })
+    head.append(link)
+
+    # 创建<body>元素.
+    body = xhtml.new_tag('body')
+    html.append(body)
+    div = xhtml.new_tag('div', attrs={'class': 'readerChapterContent'})
+    body.append(div)
+
+    # 添加全部<div>元素.
+    for node in chapter_content_html.find_all('div'):
+        div.append(node)
+
+    return xhtml.prettify()
+
+
 def _generate_oebps(rdata_file: Union[str, os.PathLike], epub_file: ZipFile):
     """创建OEBPS文件夹并生成当前文件夹下全部文件.
 
@@ -334,13 +427,20 @@ def _generate_oebps(rdata_file: Union[str, os.PathLike], epub_file: ZipFile):
                                     book_info_json['title'])
     epub_file.writestr('OEBPS/toc.ncx', toc_ncx_str)
 
-    # 写入图片和样式表文件.
     for file in file_list:
-        if (file.filename.startswith('Images/')
-                or file.filename.startswith('Styles/')):
-            file_bytes = ZipFile(rdata_file).read(file.filename)
+        file_bytes = ZipFile(rdata_file).read(file.filename)
+        # 写入图片和样式表文件.
+        if (file.filename.startswith('Images/') or
+                file.filename.startswith('Styles/')):
             epub_file.writestr(os.path.join('OEBPS/', file.filename),
                                file_bytes)
+        # 通过原始章节数据的html生成标准xhtml文件.
+        elif file.filename.startswith('Text/'):
+            chapter_index = re.findall(r'\d+', file.filename)[0]
+            chapter_xhtml = _generate_chapter_xhtml(file_bytes, chapter_index)
+            chapter_path = os.path.join('OEBPS/',
+                                        file.filename.split('.')[0] + '.xhtml')
+            epub_file.writestr(chapter_path, chapter_xhtml)
 
 
 def generate(rdata_file: Union[str, os.PathLike], verbose: bool = False):
