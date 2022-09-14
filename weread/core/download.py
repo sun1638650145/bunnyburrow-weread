@@ -107,7 +107,7 @@ def _download_for_chapter(metadata: dict, rdata_file: ZipFile):
     rdata_file.writestr(f'Text/chapter-{uid}.html', html)
 
     # 获取当前章节的对应图片, 遍历找到全部图片并保存.
-    images = BeautifulSoup(html, features='lxml').findAll('img')
+    images = BeautifulSoup(html, features='lxml').find_all('img')
     for image in images:
         image_url = image['data-src']
         image_name = 'Images/' + image_url.split('/')[-1] + '.jpg'

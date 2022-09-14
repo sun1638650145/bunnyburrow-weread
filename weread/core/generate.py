@@ -70,7 +70,7 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
 
     # 创建<package>元素.
     package = content_opf.new_tag('package', attrs={
-        'xmlns': 'https://www.idpf.org/2007/opf',
+        'xmlns': 'http://www.idpf.org/2007/opf',
         'version': '3.0',
         'unique-identifier': 'weread-book-id',
         'xml:lang': 'en'
@@ -79,8 +79,8 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
 
     # 创建<metadata>元素
     metadata = content_opf.new_tag('metadata', attrs={
-        'xmlns:dc': 'https://purl.org/dc/elements/1.1/',
-        'xmlns:opf': 'https://www.idpf.org/2007/opf'
+        'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
+        'xmlns:opf': 'http://www.idpf.org/2007/opf'
     })
     package.append(metadata)
     # 图书ID(ePub文件的唯一ID).
@@ -226,7 +226,7 @@ def _generate_toc_ncx(chapter_infos: List[Dict],
     """
     toc_ncx = BeautifulSoup(features='xml')
     ncx = toc_ncx.new_tag('ncx', attrs={
-        'xmlns': 'https://www.daisy.org/z3986/2005/ncx/',
+        'xmlns': 'http://www.daisy.org/z3986/2005/ncx/',
         'version': '2005-1',
         'xml:lang': 'en',
     })
