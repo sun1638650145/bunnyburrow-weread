@@ -148,6 +148,9 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
                 'id': 'image-' + Path(file.filename).name.split('.')[0],
                 'media-type': 'image/jpeg'
             })
+            # 为封面设置属性.
+            if file.filename == 'Images/coverpage.jpg':
+                attrs.update({'properties': 'cover-image'})
         elif file.filename.startswith('Styles/'):
             attrs.update({
                 'id': 'style-' + Path(file.filename).name.split('.')[0],
