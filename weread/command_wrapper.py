@@ -37,9 +37,12 @@ def generate_command(rdata_file: str, verbose: bool):
             |
             |-- content.opf (图书的元数据出版信息)
             |-- toc.ncx (章节的描述信息)
+            |-- Images (图片文件)
             |-- Styles (样式表css)
             |-- Text (章节内容xhtml)
-            |-- Images (图片文件)
+                |
+                |-- coverpage.xhtml (封面描述文件)
+                |-- chapter-{index}.xhtml (章节内容xhtml)
 
     Example:
         ```shell
@@ -52,7 +55,7 @@ def generate_command(rdata_file: str, verbose: bool):
         verbose: bool,
             是否展示生成ePub文件的详细信息.
     """
-    generate(rdata_file, verbose)
+    generate(rdata_file, verbose, info=True)
 
 
 def help_command(level: str):

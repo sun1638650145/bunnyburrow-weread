@@ -13,18 +13,20 @@ from bs4 import BeautifulSoup
 from weread import logger
 
 
-def _generate_meta_inf(epub_file: ZipFile):
+def _generate_meta_inf(epub_file: ZipFile, verbose: bool = False):
     """创建META-INF文件夹并生成当前文件夹下全部文件.
 
     Args:
         epub_file: ZipFile,
             生成的ePub文件的文件指针.
+        verbose: bool = False,
+            是否展示生成文件的详细信息.
     """
     # 创建container.xml.
     container_xml = BeautifulSoup(features='xml')
     container = container_xml.new_tag('container', attrs={
         'xmlns': 'urn:oasis:names:tc:opendocument:xmlns:container',
-        'version': '1.0',
+        'version': '1.0'
     })
     container_xml.append(container)
     rootfiles = container_xml.new_tag('rootfiles')
@@ -49,6 +51,10 @@ def _generate_meta_inf(epub_file: ZipFile):
 
     epub_file.writestr('META-INF/com.apple.ibooks.display-options.xml',
                        ibooks_xml.prettify())
+
+    if verbose:
+        logger.info('生成 META-INF/container.xml 文件.')
+        logger.info('生成 META-INF/com.apple.ibooks.display-options.xml 文件.')
 
 
 def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
@@ -231,7 +237,7 @@ def _generate_toc_ncx(chapter_infos: List[Dict],
     ncx = toc_ncx.new_tag('ncx', attrs={
         'xmlns': 'http://www.daisy.org/z3986/2005/ncx/',
         'version': '2005-1',
-        'xml:lang': 'en',
+        'xml:lang': 'en'
     })
     toc_ncx.append(ncx)
 
@@ -271,7 +277,7 @@ def _generate_toc_ncx(chapter_infos: List[Dict],
     for i, (chapter_info, chapter_path) in enumerate(zip(chapter_infos, chapter_paths)):  # noqa: E501
         nav_point = toc_ncx.new_tag('navPoint', attrs={
             'id': f'np-{i + 1}',
-            'playOrder': i + 1,
+            'playOrder': i + 1
         })
         nav_map.append(nav_point)
         nav_label = toc_ncx.new_tag('navLabel')
@@ -390,7 +396,7 @@ def _generate_coverpage_xhtml(epub_file: ZipFile):
     coverpage_xhtml = BeautifulSoup(features='xml')
     html = coverpage_xhtml.new_tag('html', attrs={
         'xmlns': 'http://www.w3.org/1999/xhtml',
-        'xml:lang': 'zh',
+        'xml:lang': 'zh'
     })
     coverpage_xhtml.append(html)
 
@@ -416,7 +422,9 @@ def _generate_coverpage_xhtml(epub_file: ZipFile):
                        coverpage_xhtml.prettify())
 
 
-def _generate_oebps(rdata_file: Union[str, os.PathLike], epub_file: ZipFile):
+def _generate_oebps(rdata_file: Union[str, os.PathLike],
+                    epub_file: ZipFile,
+                    verbose: bool = False):
     """创建OEBPS文件夹并生成当前文件夹下全部文件.
 
     Args:
@@ -424,6 +432,8 @@ def _generate_oebps(rdata_file: Union[str, os.PathLike], epub_file: ZipFile):
             原始数据文件.
         epub_file: ZipFile,
             生成的ePub文件的文件指针.
+        verbose: bool = False,
+            是否展示生成文件的详细信息.
     """
     # 查看原始数据文件的内容.
     try:
@@ -445,6 +455,8 @@ def _generate_oebps(rdata_file: Union[str, os.PathLike], epub_file: ZipFile):
         sys.exit(1)
     content_opf_str = _generate_content_opf(book_info_json, file_list)
     epub_file.writestr('OEBPS/content.opf', content_opf_str)
+    if verbose:
+        logger.info('生成 OEBPS/content.opf 文件.')
 
     # 通过toc.json生成toc.ncx.
     try:
@@ -465,6 +477,8 @@ def _generate_oebps(rdata_file: Union[str, os.PathLike], epub_file: ZipFile):
                                     book_info_json['bookId'],
                                     book_info_json['title'])
     epub_file.writestr('OEBPS/toc.ncx', toc_ncx_str)
+    if verbose:
+        logger.info('生成 OEBPS/toc.ncx 文件.')
 
     for file in file_list:
         file_bytes = ZipFile(rdata_file).read(file.filename)
@@ -473,19 +487,27 @@ def _generate_oebps(rdata_file: Union[str, os.PathLike], epub_file: ZipFile):
                 file.filename.startswith('Styles/')):
             epub_file.writestr(os.path.join('OEBPS/', file.filename),
                                file_bytes)
+            if verbose:
+                logger.info(f'生成 OEBPS/{file.filename} 文件.')
         # 通过原始章节数据的html生成标准xhtml文件.
         elif file.filename.startswith('Text/'):
             chapter_index = re.findall(r'\d+', file.filename)[0]
             chapter_xhtml = _generate_chapter_xhtml(file_bytes, chapter_index)
-            chapter_path = os.path.join('OEBPS/',
-                                        file.filename.split('.')[0] + '.xhtml')
+            chapter_path = file.filename.split('.')[0] + '.xhtml'
+            chapter_path = os.path.join('OEBPS/', chapter_path)
             epub_file.writestr(chapter_path, chapter_xhtml)
+            if verbose:
+                logger.info(f'生成 {chapter_path} 文件.')
 
-    # 生成Text/coverpage.xhtml.
+    # 生成OEBPS/Text/coverpage.xhtml.
     _generate_coverpage_xhtml(epub_file)
+    if verbose:
+        logger.info('生成 OEBPS/Text/coverpage.xhtml 文件.')
 
 
-def generate(rdata_file: Union[str, os.PathLike], verbose: bool = False):
+def generate(rdata_file: Union[str, os.PathLike],
+             verbose: bool = False,
+             info: bool = False) -> Path:
     """根据原始数据文件生成ePub文件.
 
     生成的ePub文件参照这个目录创建:
@@ -504,6 +526,9 @@ def generate(rdata_file: Union[str, os.PathLike], verbose: bool = False):
             |-- Images (图片文件)
             |-- Styles (样式表css)
             |-- Text (章节内容xhtml)
+                |
+                |-- coverpage.xhtml (封面描述文件)
+                |-- chapter-{index}.xhtml (章节内容xhtml)
 
     References:
         - [发布ePub文档](http://www.theheratik.net/books/tech-epub/)
@@ -513,6 +538,11 @@ def generate(rdata_file: Union[str, os.PathLike], verbose: bool = False):
             原始数据文件.
         verbose: bool, default=False,
             是否展示生成ePub文件的详细信息.
+        info: bool, default=False,
+            是否输出提示信息.
+
+    Return:
+        ePub文件的绝对路径.
     """
     # 创建ePub文件.
     epub_file_path = str(Path(rdata_file)).split('.')[0] + '.epub'
@@ -520,9 +550,19 @@ def generate(rdata_file: Union[str, os.PathLike], verbose: bool = False):
 
     # 创建mimetype文件.
     epub_file.writestr('mimetype', 'application/epub+zip')
+    if verbose:
+        logger.info('生成 mimetype 文件.')
 
     # 创建META-INF文件夹.
-    _generate_meta_inf(epub_file)
+    _generate_meta_inf(epub_file, verbose)
 
     # 创建OEBPS文件夹.
-    _generate_oebps(rdata_file, epub_file)
+    _generate_oebps(rdata_file, epub_file, verbose)
+
+    if verbose:
+        logger.info('-' * 50)
+
+    if info:
+        logger.info('成功在当前目录生成ePub文件:)')
+
+    return Path(epub_file_path).absolute()
