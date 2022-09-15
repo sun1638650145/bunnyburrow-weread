@@ -162,13 +162,13 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
             continue
         item = content_opf.new_tag('item', attrs=attrs)
         manifest.append(item)
-    # 增加描述封面的xml文件.
-    coverage_xml = content_opf.new_tag('item', attrs={
-        'href': 'Text/coverage.xml',
-        'id': 'text-coverage',
+    # 增加描述封面的xhtml文件.
+    coverpage_xhtml = content_opf.new_tag('item', attrs={
+        'href': 'Text/coverpage.xhtml',
+        'id': 'text-coverpage',
         'media-type': 'application/xhtml+xml'
     })
-    manifest.append(coverage_xml)
+    manifest.append(coverpage_xhtml)
     # 增加章节描述信息的toc.ncx文件.
     toc_ncx = content_opf.new_tag('item', attrs={
         'href': 'toc.ncx',
@@ -180,7 +180,7 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
     # 创建<spine>元素, 描述ePub文件内容的有序列表.
     spine = content_opf.new_tag('spine', attrs={'toc': 'ncx'})
     package.append(spine)
-    itemref = content_opf.new_tag('itemref', attrs={'idref': 'text-coverage'})
+    itemref = content_opf.new_tag('itemref', attrs={'idref': 'text-coverpage'})
     spine.append(itemref)
     for file in file_list:
         if file.filename.startswith('Text/'):
@@ -189,13 +189,13 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
             })
             spine.append(itemref)
 
-    # 创建<guide>元素, 指向描述封面的xml文件.
+    # 创建<guide>元素, 指向描述封面的xhtml文件.
     guide = content_opf.new_tag('guide')
     package.append(guide)
     reference = content_opf.new_tag('reference', attrs={
         'type': 'coverpage',
         'title': book_info['title'],
-        'href': 'Text/coverpage.xml'
+        'href': 'Text/coverpage.xhtml'
     })
     guide.append(reference)
 
@@ -304,7 +304,7 @@ def _processing_html(html: bytes) -> BeautifulSoup:
                 del tag[attr]
 
     # 删除多余的<span>.
-    for node in html.find_all(['h1', ['p']]):
+    for node in html.find_all(['h1', 'p']):
         tags = node.find_all()
         index = 0
         for i, tag in enumerate(tags):
@@ -377,6 +377,42 @@ def _generate_chapter_xhtml(chapter_content_html: bytes,
     return xhtml.prettify()
 
 
+def _generate_coverpage_xhtml(epub_file: ZipFile):
+    """创建描述封面的xhtml文件.
+
+    Args:
+        epub_file: ZipFile,
+            生成的ePub文件的文件指针.
+    """
+    coverpage_xhtml = BeautifulSoup(features='xml')
+    html = coverpage_xhtml.new_tag('html', attrs={
+        'xmlns': 'http://www.w3.org/1999/xhtml',
+        'xml:lang': 'zh',
+    })
+    coverpage_xhtml.append(html)
+
+    # 创建<head>元素.
+    head = coverpage_xhtml.new_tag('head')
+    html.append(head)
+    title = coverpage_xhtml.new_tag('title')
+    title.string = '封面'
+    head.append(title)
+
+    # 创建<body>元素.
+    body = coverpage_xhtml.new_tag('body')
+    html.append(body)
+    div = coverpage_xhtml.new_tag('div')
+    body.append(div)
+    img = coverpage_xhtml.new_tag('img', attrs={
+        'src': '../Images/coverpage.jpg',
+        'alt': ''
+    })
+    div.append(img)
+
+    epub_file.writestr('OEBPS/Text/coverpage.xhtml',
+                       coverpage_xhtml.prettify())
+
+
 def _generate_oebps(rdata_file: Union[str, os.PathLike], epub_file: ZipFile):
     """创建OEBPS文件夹并生成当前文件夹下全部文件.
 
@@ -441,6 +477,9 @@ def _generate_oebps(rdata_file: Union[str, os.PathLike], epub_file: ZipFile):
             chapter_path = os.path.join('OEBPS/',
                                         file.filename.split('.')[0] + '.xhtml')
             epub_file.writestr(chapter_path, chapter_xhtml)
+
+    # 生成Text/coverpage.xhtml.
+    _generate_coverpage_xhtml(epub_file)
 
 
 def generate(rdata_file: Union[str, os.PathLike], verbose: bool = False):
