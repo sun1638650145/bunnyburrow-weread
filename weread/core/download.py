@@ -98,10 +98,6 @@ def _download_for_chapter(metadata: dict, rdata_file: ZipFile):
     # 获取当前章节的uid.
     uid = metadata['currentChapter']['chapterUid']
 
-    # 获取当前章节的对应样式表.
-    css = metadata['chapterContentStyles']
-    rdata_file.writestr(f'Styles/chapter-{uid}.css', css)
-
     # 获取当前章节的对应文本.
     html = metadata['chapterContentHtml'][0]
     rdata_file.writestr(f'Text/chapter-{uid}.html', html)
@@ -203,6 +199,10 @@ async def download(name: str,
     chapter_infos = book_metadata['chapterInfos']
     chapter_infos_json = json.dumps(chapter_infos)
     rdata_file.writestr('toc.json', chapter_infos_json)
+
+    # 保存图书的样式表文件.
+    css = book_metadata['chapterContentStyles']
+    rdata_file.writestr('Styles/stylesheet.css', css)
 
     # 保存书籍的封面图片.
     coverpage_url = book_info['cover']

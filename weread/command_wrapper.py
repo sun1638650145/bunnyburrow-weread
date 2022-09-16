@@ -39,6 +39,9 @@ def generate_command(rdata_file: str, verbose: bool):
             |-- toc.ncx (章节的描述信息)
             |-- Images (图片文件)
             |-- Styles (样式表css)
+                |
+                |-- stylesheet.css (样式表)
+                |
             |-- Text (章节内容xhtml)
                 |
                 |-- coverpage.xhtml (封面描述文件)

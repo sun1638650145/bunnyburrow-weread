@@ -164,11 +164,6 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
             # 为封面设置属性.
             if file.filename == 'Images/coverpage.jpg':
                 attrs.update({'properties': 'cover-image'})
-        elif file.filename.startswith('Styles/'):
-            attrs.update({
-                'id': 'style-' + Path(file.filename).name.split('.')[0],
-                'media-type': 'text/css'
-            })
         elif file.filename.startswith('Text/'):
             attrs.update({
                 'id': 'text-' + Path(file.filename).name.split('.')[0],
@@ -185,6 +180,13 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
         'media-type': 'application/xhtml+xml'
     })
     manifest.append(coverpage_xhtml)
+    # 增加样式表css文件.
+    stylesheet_css = content_opf.new_tag('item', attrs={
+        'href': 'Styles/stylesheet.css',
+        'id': 'style-stylesheet',
+        'media-type': 'text/css'
+    })
+    manifest.append(stylesheet_css)
     # 增加章节描述信息的toc.ncx文件.
     toc_ncx = content_opf.new_tag('item', attrs={
         'href': 'toc.ncx',
@@ -344,15 +346,12 @@ def _processing_html(html: bytes) -> BeautifulSoup:
     return html
 
 
-def _generate_chapter_xhtml(chapter_content_html: bytes,
-                            chapter_index: str) -> str:
+def _generate_chapter_xhtml(chapter_content_html: bytes) -> str:
     """基于原始章节数据的html在OEBPS/Text/文件夹下创建标准xhtml文件.
 
     Args:
         chapter_content_html: bytes,
             原始章节内容.
-        chapter_index: str,
-            章节索引.
 
     Return:
         章节文件内容的xhtml文本.
@@ -376,7 +375,7 @@ def _generate_chapter_xhtml(chapter_content_html: bytes,
     head.append(title)
     link = xhtml.new_tag('link', attrs={
         'rel': 'stylesheet',
-        'href': f'../Styles/chapter-{chapter_index}.css'
+        'href': '../Styles/stylesheet.css'
     })
     head.append(link)
 
@@ -498,8 +497,7 @@ def _generate_oebps(rdata_file: Union[str, os.PathLike],
                 logger.info(f'生成 OEBPS/{file.filename} 文件.')
         # 通过原始章节数据的html生成标准xhtml文件.
         elif file.filename.startswith('Text/'):
-            chapter_index = re.findall(r'\d+', file.filename)[0]
-            chapter_xhtml = _generate_chapter_xhtml(file_bytes, chapter_index)
+            chapter_xhtml = _generate_chapter_xhtml(file_bytes)
             chapter_path = file.filename.split('.')[0] + '.xhtml'
             chapter_path = os.path.join('OEBPS/', chapter_path)
             epub_file.writestr(chapter_path, chapter_xhtml)
@@ -532,6 +530,9 @@ def generate(rdata_file: Union[str, os.PathLike],
             |-- toc.ncx (章节的描述信息)
             |-- Images (图片文件)
             |-- Styles (样式表css)
+                |
+                |-- stylesheet.css (样式表)
+                |
             |-- Text (章节内容xhtml)
                 |
                 |-- coverpage.xhtml (封面描述文件)
