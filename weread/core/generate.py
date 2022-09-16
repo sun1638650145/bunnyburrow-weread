@@ -173,21 +173,21 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
             continue
         item = content_opf.new_tag('item', attrs=attrs)
         manifest.append(item)
-    # 增加描述封面的xhtml文件.
+    # 添加描述封面的xhtml文件.
     coverpage_xhtml = content_opf.new_tag('item', attrs={
         'href': 'Text/coverpage.xhtml',
         'id': 'text-coverpage',
         'media-type': 'application/xhtml+xml'
     })
     manifest.append(coverpage_xhtml)
-    # 增加样式表css文件.
+    # 添加样式表css文件.
     stylesheet_css = content_opf.new_tag('item', attrs={
         'href': 'Styles/stylesheet.css',
         'id': 'style-stylesheet',
         'media-type': 'text/css'
     })
     manifest.append(stylesheet_css)
-    # 增加章节描述信息的toc.ncx文件.
+    # 添加章节描述信息的toc.ncx文件.
     toc_ncx = content_opf.new_tag('item', attrs={
         'href': 'toc.ncx',
         'id': 'ncx',
