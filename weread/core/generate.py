@@ -137,10 +137,17 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
     dc_description.string = book_info['intro']
     metadata.append(dc_description)
     # meta用于保存自定义属性.
+    # 针对iBooks进行优化.
     meta = content_opf.new_tag('meta', attrs={
         'property': 'ibooks:specified-fonts'
     })
     meta.string = 'true'
+    metadata.append(meta)
+    # ePub缩略图显示为图片封面.
+    meta = content_opf.new_tag('meta', attrs={
+        'name': 'cover',
+        'content': 'image-coverpage'
+    })
     metadata.append(meta)
 
     # 创建<manifest>元素.
