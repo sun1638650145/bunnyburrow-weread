@@ -7,6 +7,7 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import mkstemp
 from typing import Tuple
+from urllib.error import HTTPError
 from urllib.request import urlretrieve
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -108,8 +109,12 @@ def _download_for_chapter(metadata: dict, rdata_file: ZipFile):
         image_url = image['data-src']
         image_name = 'Images/' + image_url.split('/')[-1] + '.jpg'
         _, temp_image_path = mkstemp()
-        urlretrieve(url=image_url, filename=temp_image_path)
-        rdata_file.write(temp_image_path, image_name)
+        try:
+            urlretrieve(url=image_url, filename=temp_image_path)
+            rdata_file.write(temp_image_path, image_name)
+        except HTTPError as err:
+            logger.warning(f'状态码: {err.code}, '
+                           f'没有找到图片{image_url}, 你可以选择重新尝试或者无视警告.')
 
 
 async def download(name: str,
