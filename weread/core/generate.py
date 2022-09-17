@@ -385,8 +385,8 @@ def _generate_chapter_xhtml(chapter_content_html: bytes) -> str:
     div = xhtml.new_tag('div', attrs={'class': 'readerChapterContent'})
     body.append(div)
 
-    # 添加全部<div>元素.
-    for node in chapter_content_html.find_all('div'):
+    # 添加<body>中的全部<div>元素.
+    for node in chapter_content_html.body.find_all('div', recursive=False):
         div.append(node)
 
     return xhtml.prettify()
