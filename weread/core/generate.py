@@ -315,9 +315,9 @@ def _processing_html(html: bytes) -> BeautifulSoup:
 
     # 移除无意义标签.
     remove_attrs = ['data-wr-bd', 'data-wr-co', 'data-wr-id']
-    for node in html.find_all('div'):
+    for node in html.find_all(['div', 'p']):
         for attr in remove_attrs:
-            del node[attr]  # 删除<div>上的属性.
+            del node[attr]  # 删除<div>和<p>上的属性.
             for tag in node.find_all():
                 del tag[attr]
 
@@ -385,8 +385,8 @@ def _generate_chapter_xhtml(chapter_content_html: bytes) -> str:
     div = xhtml.new_tag('div', attrs={'class': 'readerChapterContent'})
     body.append(div)
 
-    # 添加<body>中的全部<div>元素.
-    for node in chapter_content_html.body.find_all('div', recursive=False):
+    # 添加<body>中的全部<div>和<p>元素.
+    for node in chapter_content_html.body.find_all(['div', 'p'], recursive=False):  # noqa: E501
         div.append(node)
 
     return xhtml.prettify()
