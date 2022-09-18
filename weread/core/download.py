@@ -100,7 +100,9 @@ def _download_for_chapter(metadata: dict, rdata_file: ZipFile):
     uid = metadata['currentChapter']['chapterUid']
 
     # 获取当前章节的对应文本.
-    html = metadata['chapterContentHtml'][0]
+    html = ''
+    for page in metadata['chapterContentHtml']:
+        html += page
     rdata_file.writestr(f'Text/chapter-{uid}.html', html)
 
     # 获取当前章节的对应图片, 遍历找到全部图片并保存.
