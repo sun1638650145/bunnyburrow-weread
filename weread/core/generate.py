@@ -527,7 +527,7 @@ def generate(rdata_file: Union[str, os.PathLike],
         |-- OEBPS
             |
             |-- content.opf (图书的元数据)
-            |-- toc.ncx (章节的描述信息)
+            |-- toc.ncx (章节的导航信息)
             |-- Images (图片文件)
             |-- Styles (样式表css)
                 |

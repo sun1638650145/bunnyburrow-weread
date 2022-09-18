@@ -35,8 +35,8 @@ def generate_command(rdata_file: str, verbose: bool):
         |
         |-- OEBPS
             |
-            |-- content.opf (图书的元数据出版信息)
-            |-- toc.ncx (章节的描述信息)
+            |-- content.opf (图书的元数据)
+            |-- toc.ncx (章节的导航信息)
             |-- Images (图片文件)
             |-- Styles (样式表css)
                 |
