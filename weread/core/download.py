@@ -12,14 +12,19 @@ from urllib.request import urlretrieve
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from bs4 import BeautifulSoup
-from PIL import Image
 from pyppeteer import launch
 from pyppeteer.browser import Browser
 from pyppeteer.page import Page
-from pyzbar import pyzbar
-from qrcode import QRCode
 
 from weread import logger
+
+try:
+    from PIL import Image
+    from pyzbar import pyzbar
+    from qrcode import QRCode
+except ModuleNotFoundError:
+    logger.warning("如果你需要使用headless模式, 请运行`pip install 'weread[headless]'`"
+                   "安装依赖项, 否则请忽略警告.")
 
 
 def _generate_qrcode(base64_str: str):

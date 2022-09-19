@@ -16,7 +16,7 @@
 # 扫码登录后, 通过web阅读器下载原始数据文件.
 weread-cli download -v 怦然心动
 # 生成ePub文件.
-weread-cli generate ./怦然心动.rdata.zip
+weread-cli generate ./怦然心动（精装纪念版）.rdata.zip
 ```
 
 ### 2. 在Python 🐍 脚本中使用
