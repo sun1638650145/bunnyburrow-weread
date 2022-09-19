@@ -13,13 +13,13 @@ from bs4 import BeautifulSoup
 from weread import logger
 
 
-def _generate_meta_inf(epub_file: ZipFile, verbose: bool = False):
+def _generate_meta_inf(epub_file: ZipFile, verbose):
     """创建META-INF文件夹并生成当前文件夹下全部文件.
 
     Args:
         epub_file: ZipFile,
             生成的ePub文件的文件指针.
-        verbose: bool = False,
+        verbose: bool,
             是否展示生成文件的详细信息.
     """
     # 创建container.xml.
@@ -430,7 +430,7 @@ def _generate_coverpage_xhtml(epub_file: ZipFile):
 
 def _generate_oebps(rdata_file: Union[str, os.PathLike],
                     epub_file: ZipFile,
-                    verbose: bool = False):
+                    verbose: bool):
     """创建OEBPS文件夹并生成当前文件夹下全部文件.
 
     Args:
