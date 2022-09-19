@@ -125,9 +125,11 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
     dc_date.string = strftime('%Y-%m-%dT%H:%M:%SZ', publish_time)
     metadata.append(dc_date)
     # 图书ISBN(可选).
-    dc_source = content_opf.new_tag('dc:source', attrs={'id': 'src-id'})
-    dc_source.string = 'urn:isbn:' + book_info['isbn']
-    metadata.append(dc_source)
+    dc_identifier = content_opf.new_tag('dc:identifier', attrs={
+        'opf:scheme': 'isbn'
+    })
+    dc_identifier.string = 'urn:isbn:' + book_info['isbn']
+    metadata.append(dc_identifier)
     # 图书出版社(可选).
     dc_publisher = content_opf.new_tag('dc:publisher')
     dc_publisher.string = book_info['publisher']
