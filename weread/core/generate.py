@@ -324,7 +324,7 @@ def _processing_html(html: bytes) -> BeautifulSoup:
                 del tag[attr]
 
     # 删除多余的<span>.
-    for node in html.find_all(['h1', 'p']):
+    for node in html.find_all(['h1', 'h2', 'p']):
         tags = node.find_all()
         index = 0
         for i, tag in enumerate(tags):
