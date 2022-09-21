@@ -325,16 +325,26 @@ def _processing_html(html: bytes) -> BeautifulSoup:
 
     # 删除多余的<span>.
     for node in html.find_all(['h1', 'h2', 'p']):
-        tags = node.find_all()
-        index = 0
+        tags = node.find_all(recursive=False)
+        idx = 0
         for i, tag in enumerate(tags):
             # 重置索引; 重置索引的两种情况: 1.不是span 2.span上有属性.
             if tag.name != 'span' or len(tag.attrs) > 0:
-                index = i + 1
-            if index != i and tag.name == 'span':  # 只删除不是索引处的<span>.
+                idx = i + 1
+            if idx != i and tag.name == 'span':  # 只删除不是索引处的<span>.
                 if tag.string:  # 空<span>是注释, 需要保留.
-                    tags[index].string += tag.string
+                    tags[idx].string += tag.string
                     tag.decompose()
+
+            # 存在子结点, 进入结点二次操作(修复直接在上层循环列表被错误合并的问题).
+            if tag.find_all(recursive=False):
+                c_idx, c_tags = 0, tag.find_all()
+                for j, c_tag in enumerate(c_tags):
+                    if c_tag.name != 'span' or len(c_tag.attrs) > 0:
+                        c_idx = j + 1  # 重置索引.
+                    if c_idx != j and c_tag.string:
+                        c_tags[c_idx].string += c_tag.string
+                        c_tag.decompose()
 
     # 处理图片链接.
     for image_node in html.find_all('img'):
@@ -344,6 +354,16 @@ def _processing_html(html: bytes) -> BeautifulSoup:
         # 更新为新的地址并删除data-src属性.
         image_node.attrs['src'] = image_path
         del image_node.attrs['data-src']
+
+    # 修复注释链接失效.
+    a_set = html.find_all('a')
+    a_size = len(a_set)
+    for idx, a_node in enumerate(a_set):
+        # 只有href参数为空的时候才进行修复.
+        if a_node.has_attr('href') and not a_node.attrs['href']:
+            # 公式: (size / 2 + idx - 1) % size
+            value = '#' + a_set[(a_size // 2 + idx - 1) % a_size].attrs['id']
+            a_node.attrs['href'] = value
 
     return html
 
