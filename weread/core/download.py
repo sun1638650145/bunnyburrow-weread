@@ -57,7 +57,7 @@ async def _launch_browser(headless: bool,
     Returns:
         启动的浏览器和进行操作的页面.
     """
-    browser = await launch(headless=headless)
+    browser = await launch(headless=headless, logLevel='ERROR')
 
     # 设置无痕模式.
     if incognito:
