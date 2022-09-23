@@ -1,9 +1,7 @@
-import base64
 import json
 import sys
 import time
 
-from io import BytesIO
 from pathlib import Path
 from tempfile import mkstemp
 from typing import List, Tuple
@@ -19,6 +17,9 @@ from pyppeteer.page import Page
 from weread import logger
 
 try:
+    import base64
+    from io import BytesIO
+
     from PIL import Image
     from pyzbar import pyzbar
     from qrcode import QRCode
@@ -80,6 +81,7 @@ async def _launch_browser(headless: bool,
             # 生成二维码.
             _generate_qrcode(image_base64)
         except IndexError:
+            await browser.close()
             logger.error('二维码生成失败, 请重新启动.')
             sys.exit(1)
 
@@ -155,7 +157,7 @@ def _download_images(image_urls: List[str],
 async def download(name: str,
                    headless: bool = False,
                    incognito: bool = True,
-                   delay: float = 3,
+                   delay: float = 2,
                    verbose: bool = False,
                    info: bool = False) -> Path:
     """根据图书名称下载原始的数据到本地.
@@ -167,8 +169,9 @@ async def download(name: str,
             是否为浏览器设置无界面(headless)模式.
         incognito: bool, default=True,
             是否为浏览器设置无痕模式.
-        delay: float, default=3,
-            设置延时, 用于等待图片加载并模拟人类操作.
+        delay: float, default=2,
+            设置延时, 用于等待网页加载并模拟人类操作,
+             可根据网络实际情况进行调整.
         verbose: bool, default=False,
             是否展示下载过程的详细信息.
         info: bool, default=False,
@@ -193,6 +196,7 @@ async def download(name: str,
             break
 
     if not book_url:
+        await browser.close()
         logger.error(f'没有找到你想要下载的《{name}》, 请检查你是否拥有这本书或书名是否正确!')
         sys.exit(1)
 
