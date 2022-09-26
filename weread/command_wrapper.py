@@ -1,8 +1,25 @@
 from asyncio import run
 
 from weread import __version__
-from weread import download, generate
+from weread import check, download, generate
 from weread import logger
+
+
+def check_command(rdata_file: str, verbose: bool):
+    """检查命令, 检查下载的原始数据文件的完整性.
+
+    Example:
+        ```shell
+        weread-cli check 怦然心动.rdata.zip
+        ```
+
+    Args:
+        rdata_file: str,
+            原始数据文件.
+        verbose: bool,
+            是否展示检查ePub文件的详细信息.
+    """
+    check(rdata_file, verbose, info=True)
 
 
 def download_command(name: str, verbose: bool):
@@ -53,7 +70,7 @@ def generate_command(rdata_file: str, verbose: bool):
         ```
 
     Args:
-        rdata_file: str or os.PathLike,
+        rdata_file: str,
             原始数据文件.
         verbose: bool,
             是否展示生成ePub文件的详细信息.
@@ -79,6 +96,10 @@ Bunnyburrow Software Project(兔窝镇软件计划)
 Copyright 2022 Steve R. Sun. All rights reserved.
 -------------------------------------------------
 Usage:
+  weread-cli check [option] <rdata_file>
+    check: 检查下载的原始数据文件的完整性.
+      Option:
+        --verbose, -v: 展示检查ePub文件的详细信息.
   weread-cli download [option] <book_name>
     download: 根据图书名称下载原始的数据到本地.
       Option:

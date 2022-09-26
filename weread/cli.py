@@ -4,6 +4,7 @@ from typing import Dict, List
 from weread import __version__
 from weread import logger
 from weread.command_wrapper import (
+    check_command,
     download_command,
     generate_command,
     help_command,
@@ -29,7 +30,22 @@ def _parse_args(args: List) -> Dict:
 
         metadata = {}
         try:
-            if args[0] == 'download':
+            if args[0] == 'check':
+                if args[1] in ('--verbose', '-v'):
+                    metadata.update({
+                        'check': {
+                            'rdata_file': args[2],
+                            'verbose': True
+                        }
+                    })
+                else:
+                    metadata.update({
+                        'check': {
+                            'rdata_file': args[2],
+                            'verbose': False
+                        }
+                    })
+            elif args[0] == 'download':
                 if args[1] in ('--verbose', '-v'):
                     metadata.update({
                         'download': {
@@ -76,7 +92,9 @@ def run():
     """启动命令行工具."""
     meta_data = _parse_args(sys.argv)
     for command, params in meta_data.items():
-        if command == 'download':
+        if command == 'check':
+            check_command(params['rdata_file'], params['verbose'])
+        elif command == 'download':
             download_command(params['name'], params['verbose'])
         elif command == 'generate':
             generate_command(params['rdata_file'], params['verbose'])
