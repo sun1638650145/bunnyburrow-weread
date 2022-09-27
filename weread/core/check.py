@@ -39,7 +39,7 @@ def check(rdata_file: Union[str, os.PathLike],
             elif file.filename.startswith('Text/'):
                 text_list.append(file.filename)
     except BadZipFile:
-        logger.error(f'{Path(rdata_file).name}不是一个合法的rdata文件!')
+        logger.error(f'{Path(rdata_file).name} 不是一个合法的rdata文件!')
         sys.exit(1)
     except FileNotFoundError:
         logger.error('请检查你的rdata文件路径, 未找到rdata文件!')
@@ -53,7 +53,7 @@ def check(rdata_file: Union[str, os.PathLike],
     for chapter in chapter_infos:
         chapter_file = f'Text/chapter-{chapter["chapterUid"]}.html'
         if chapter_file not in text_list and verbose:
-            logger.warning(f'文件{chapter_file}未找到!')
+            logger.warning(f'文件 {chapter_file} 未找到!')
             status = False
         else:
             # 添加当前章节的对应图片.
@@ -66,7 +66,7 @@ def check(rdata_file: Union[str, os.PathLike],
     image_set.add('coverpage')  # 添加封面文件.
     for image in image_set:
         if f'Images/{image}.jpg' not in image_list and verbose:
-            logger.warning(f'图片Images/{image}.jpg未找到!')
+            logger.warning(f'图片 Images/{image}.jpg 未找到!')
             status = False
 
     if verbose:

@@ -468,7 +468,7 @@ def _generate_oebps(rdata_file: Union[str, os.PathLike],
         file_list = ZipFile(rdata_file).infolist()
         file_list.sort(key=lambda x: (re.sub(r'\d+', '', x.filename)))  # 先根据字母, 再根据数字排序.  # noqa: E501
     except BadZipFile:
-        logger.error(f'{Path(rdata_file).name}不是一个合法的原始数据文件!')
+        logger.error(f'{Path(rdata_file).name} 不是一个合法的原始数据文件!')
         sys.exit(1)
     except FileNotFoundError:
         logger.error('请检查你的原始数据文件路径, 未找到原始数据文件!')

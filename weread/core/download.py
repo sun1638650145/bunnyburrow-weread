@@ -257,7 +257,7 @@ async def download(name: str,
     # 保存书籍的封面图片.
     coverpage_url = book_info['cover']
     coverpage_url = coverpage_url.replace('s_', 'o_')  # 修正使用缩略图的问题.
-    image_urls.update([coverpage_url])
+    image_urls.add(coverpage_url)
     _download_images(list(image_urls), rdata_file, verbose)
 
     if verbose:

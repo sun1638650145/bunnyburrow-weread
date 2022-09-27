@@ -15,6 +15,8 @@
 ```shell
 # 扫码登录后, 通过web阅读器下载原始数据文件.
 weread-cli download -v 怦然心动
+# 检查下载的原始数据文件的完整性.
+weread-cli check ./怦然心动（精装纪念版）.rdata.zip
 # 生成ePub文件.
 weread-cli generate ./怦然心动（精装纪念版）.rdata.zip
 ```
@@ -23,16 +25,17 @@ weread-cli generate ./怦然心动（精装纪念版）.rdata.zip
 
 ```python
 import asyncio
-from weread import download, generate
+from weread import check, download, generate
 
 # 扫码登录后, 通过web阅读器下载原始数据文件.
 # 脚本中提供更加丰富的功能, 比如设置headless和无痕模式.
 rdata_filepath = asyncio.run(download('怦然心动',
                                       verbose=True,
-                                      info=True, 
+                                      info=True,
                                       incognito=False))
-# 生成ePub文件.
-generate(rdata_filepath, info=True)
+# 检查原始数据文件完整性, 并生成ePub文件.
+if check(rdata_filepath):
+    generate(rdata_filepath, info=True)
 ```
 
 ### 3. 在集成的Bunnyburrow中通过图形化界面使用 🧑‍💻 (即将实现)
