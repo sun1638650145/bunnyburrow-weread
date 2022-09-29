@@ -15,11 +15,12 @@ setup(
     packages=find_packages(),
     classifiers=[
         'Development Status :: 4 - Beta',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
         'Topic :: Utilities',
     ],
-    license='Non-free Software',
+    license='GNU General Public License v2 (GPLv2)',
     install_requires=[
         'beautifulsoup4==4.11.1',
         'pyppeteer==1.0.2',
