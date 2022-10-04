@@ -3,7 +3,7 @@
 Bunnyburrow Software Project(兔窝镇软件计划)
 Copyright 2022 Steve R. Sun. All rights reserved.
 """
-__version__ = '0.1b0'
+__version__ = '0.1b1'
 
 import logging
 # 设置系统logger.

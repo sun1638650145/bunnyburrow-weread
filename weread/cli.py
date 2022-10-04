@@ -41,7 +41,7 @@ def _parse_args(args: List) -> Dict:
                 else:
                     metadata.update({
                         'check': {
-                            'rdata_file': args[2],
+                            'rdata_file': args[1],
                             'verbose': False
                         }
                     })
