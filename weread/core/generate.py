@@ -219,7 +219,7 @@ def _generate_content_opf(book_info: Dict, file_list: List[ZipInfo]) -> str:
     })
     guide.append(reference)
 
-    return content_opf.prettify()
+    return str(content_opf)  # TODO(Steve Sun): prettify()会导致iBooks错误识别标题缩进为空格.
 
 
 def _generate_toc_ncx(chapter_infos: List[Dict],
