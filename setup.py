@@ -23,6 +23,7 @@ setup(
     license='GNU General Public License v2 (GPLv2)',
     install_requires=[
         'beautifulsoup4==4.11.1',
+        'lxml==4.9.1',
         'pyppeteer==1.0.2',
     ],
     entry_points={
