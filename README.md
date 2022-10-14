@@ -30,7 +30,7 @@ import asyncio
 from weread import check, download, generate
 
 # 扫码登录后, 通过web阅读器下载原始数据文件.
-# 脚本中提供更加丰富的功能, 比如设置headless和无痕模式.
+# 脚本中提供更加丰富的功能, 比如设置自定义下载路径, headless和无痕模式.
 rdata_filepath = asyncio.run(download('怦然心动',
                                       verbose=True,
                                       info=True,
