@@ -1,10 +1,11 @@
 import json
+import os
 import sys
 import time
 
 from pathlib import Path
 from tempfile import mkstemp
-from typing import List, Tuple
+from typing import List, Optional, Tuple, Union
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -155,6 +156,7 @@ def _download_images(image_urls: List[str],
 
 
 async def download(name: str,
+                   rdata_file_path: Optional[Union[str, os.PathLike]] = None,
                    headless: bool = False,
                    incognito: bool = True,
                    delay: float = 2,
@@ -165,6 +167,8 @@ async def download(name: str,
     Args:
         name: str,
             图书的名称.
+        rdata_file_path: str or os.PathLike, default=None,
+            原始数据文件保存路径, 默认为'./图书名.rdata.zip'.
         headless: bool, default=False,
             是否为浏览器设置无界面(headless)模式.
         incognito: bool, default=True,
@@ -178,7 +182,7 @@ async def download(name: str,
             是否输出提示信息.
 
     Return:
-        原始数据文件的绝对路径.
+        原始数据文件保存的绝对路径.
     """
     # 启动浏览器, 登录账户.
     browser, page = await _launch_browser(headless, incognito)
@@ -206,7 +210,8 @@ async def download(name: str,
     }''')
 
     # 创建保存原始数据文件.
-    rdata_file_path = book_metadata['bookInfo']['title'] + '.rdata.zip'
+    if not rdata_file_path:
+        rdata_file_path = Path(book_metadata['bookInfo']['title'] + '.rdata.zip')  # noqa: E501
     rdata_file = ZipFile(rdata_file_path, 'w', ZIP_DEFLATED)
 
     # 遍历每章下载原始文本并获取图片地址.

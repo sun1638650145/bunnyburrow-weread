@@ -35,7 +35,10 @@ def download_command(name: str, verbose: bool):
         verbose: bool,
             是否展示下载过程的详细信息.
     """
-    run(download(name, verbose=verbose, info=True))
+    run(download(name,
+                 rdata_file_path=None,
+                 verbose=verbose,
+                 info=True))
 
 
 def generate_command(rdata_file: str, verbose: bool):
