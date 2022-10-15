@@ -12,7 +12,7 @@ from weread.command_wrapper import (
 )
 
 
-def _parse_args(args: List) -> Dict:
+def _parse_args(args: List[str]) -> Dict:
     """解析命令行参数.
 
     Args:

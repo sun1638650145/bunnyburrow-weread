@@ -1,5 +1,7 @@
 # 微信读书ePub下载工具 🔧
 
+[![build](https://github.com/sun1638650145/bunnyburrow-weread/actions/workflows/build.yml/badge.svg)](https://github.com/sun1638650145/bunnyburrow-weread/actions/workflows/build.yml) [![codecov](https://codecov.io/gh/sun1638650145/bunnyburrow-weread/branch/master/graph/badge.svg?token=BGOKZFYKWA)](https://codecov.io/gh/sun1638650145/bunnyburrow-weread)
+
 微信读书ePub下载工具是Bunnyburrow Software Project(兔窝镇软件计划)的第2个组件, 它可以下载您已购买的电子书.
 
 ## 安装

@@ -1,8 +1,11 @@
 from asyncio import run
+from typing import Literal
 
 from weread import __version__
 from weread import check, download, generate
 from weread import logger
+
+Mode = Literal['error', 'info']
 
 
 def check_command(rdata_file: str, verbose: bool):
@@ -81,7 +84,7 @@ def generate_command(rdata_file: str, verbose: bool):
     generate(rdata_file, verbose, info=True)
 
 
-def help_command(level: str):
+def help_command(level: Mode):
     """帮助命令, 用于查看帮助信息.
 
     Example:
