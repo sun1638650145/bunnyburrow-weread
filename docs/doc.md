@@ -52,6 +52,88 @@ if check(rdata_filepath):
     generate(rdata_filepath, info=True)
 ```
 
+#### check
+
+检查下载的原始数据文件的完整性.
+
+```python
+check(rdata_file, verbose=False, info=False)
+```
+
+##### 参数
+
+* **rdata_file**: 字符串或路径, 原始数据文件.
+* **verbose**: 布尔类型, 默认为`False`, 是否展示检查`ePub`文件的详细信息.
+* **info**: 布尔类型, 默认为`False`, 是否输出提示信息.
+
+##### 返回
+
+检查的情况.
+
+#### *(async)* download
+
+根据图书名称下载原始的数据到本地.
+
+```python
+download(name, rdata_file_path=None, headless=False, incognito=True, delay=2, verbose=False, info=False)
+```
+
+##### 参数
+
+* **name**: 字符串, 图书的名称.
+* **rdata_file_path**: 字符串或路径, 默认为`'./图书名.rdata.zip'`, 原始数据文件保存路径.
+* **headless**: 布尔类型, 默认为`False`, 是否为浏览器设置无界面(headless)模式.
+* **incognito**: 布尔类型, 默认为`True`, 是否为浏览器设置无痕模式.
+* **delay**: 浮点数, 默认为`2`, 设置延时, 用于等待网页加载并模拟人类操作, 可根据网络实际情况进行调整.
+* **verbose**: 布尔类型, 默认为`False`, 是否展示下载过程的详细信息.
+* **info**: 布尔类型, 默认为`False`, 是否输出提示信息.
+
+##### 返回
+
+原始数据文件保存的绝对路径.
+
+#### generate
+
+根据原始数据文件生成`ePub`文件. 生成的`ePub`文件参照这个目录创建:
+
+```
+ePub 3.x
+    |
+    |-- mimetype (纯文本`application/epub+zip`)
+    |-- META-INF
+        |
+        |-- container.xml (用于指向元数据文件的位置)
+        |-- com.apple.ibooks.display-options.xml (Apple Books的拓展)
+    |
+    |-- OEBPS
+        |
+        |-- content.opf (图书的元数据)
+        |-- toc.ncx (章节的导航信息)
+        |-- Images (图片文件)
+        |-- Styles (样式表css)
+            |
+            |-- stylesheet.css (样式表)
+            |
+        |-- Text (章节内容xhtml)
+            |
+            |-- coverpage.xhtml (封面描述文件)
+            |-- chapter-{index}.xhtml (章节内容xhtml)
+```
+
+```python
+generate(rdata_file, verbose=False, info=False)
+```
+
+##### 参数
+
+* **rdata_file**: 字符串或路径, 原始数据文件.
+* **verbose**: 布尔类型, 默认为`False`, 是否展示生成`ePub`文件的详细信息.
+* **info**: 布尔类型, 默认为`False`, 是否输出提示信息.
+
+##### 返回
+
+`ePub`文件的绝对路径.
+
 ## 目前已知的问题
 
 目前已知的情况下, 微信读书ePub下载工具很“狂妄”的认为是你能找到的最好的下载工具, 它几乎可以完美的下载原始数据并生成ePub文件; 但是受限作者思维的局限性, 总是会有可以改进的问题.

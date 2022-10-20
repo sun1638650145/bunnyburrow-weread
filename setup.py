@@ -5,7 +5,7 @@ with open('README.md', 'r', encoding='utf-8') as fp:
 
 setup(
     name='weread',
-    version='0.1b1',
+    version='0.1rc0',
     description='微信读书ePub下载工具',
     long_description=long_description,
     long_description_content_type='text/markdown',
