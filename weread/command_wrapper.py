@@ -1,5 +1,6 @@
+import sys
 from asyncio import run
-from typing import Literal
+from typing import Callable, Literal
 
 from weread import __version__
 from weread import check, download, generate
@@ -8,6 +9,21 @@ from weread import logger
 Mode = Literal['error', 'info']
 
 
+def keyboard_interrupt(function: Callable) -> Callable:
+    """键盘中断装饰器, 用于处理键盘中断的异常.
+    Args:
+        function: 被调函数.
+    """
+    def wrapper(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except KeyboardInterrupt:
+            sys.exit(130)
+
+    return wrapper
+
+
+@keyboard_interrupt
 def check_command(rdata_file: str, verbose: bool):
     """检查命令, 检查下载的原始数据文件的完整性.
 
@@ -25,6 +41,7 @@ def check_command(rdata_file: str, verbose: bool):
     check(rdata_file, verbose, info=True)
 
 
+@keyboard_interrupt
 def download_command(name: str, verbose: bool):
     """下载命令, 根据图书名称下载原始的数据到本地.
 
@@ -44,6 +61,7 @@ def download_command(name: str, verbose: bool):
                  info=True))
 
 
+@keyboard_interrupt
 def generate_command(rdata_file: str, verbose: bool):
     """生成ePub文件命令, 根据原始数据文件生成ePub文件.
 
@@ -84,6 +102,7 @@ def generate_command(rdata_file: str, verbose: bool):
     generate(rdata_file, verbose, info=True)
 
 
+@keyboard_interrupt
 def help_command(level: Mode):
     """帮助命令, 用于查看帮助信息.
 
@@ -125,6 +144,7 @@ Usage:
         logger.info(_help_msg)
 
 
+@keyboard_interrupt
 def version_command():
     """查看版本命令.
 
