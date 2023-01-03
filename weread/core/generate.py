@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from weread import logger
 
 
-def _generate_meta_inf(epub_file: ZipFile, verbose):
+def _generate_meta_inf(epub_file: ZipFile, verbose: bool):
     """创建META-INF文件夹并生成当前文件夹下全部文件.
 
     Args:

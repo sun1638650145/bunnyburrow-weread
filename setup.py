@@ -5,7 +5,7 @@ with open('README.md', 'r', encoding='utf-8') as fp:
 
 setup(
     name='weread',
-    version='0.1rc0',
+    version='0.1.1b0',
     description='微信读书ePub下载工具',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -23,7 +23,7 @@ setup(
     license='GNU General Public License v2 (GPLv2)',
     install_requires=[
         'beautifulsoup4==4.11.1',
-        'lxml==4.9.1',
+        'lxml>=4.9.1, <=4.9.2',
         'pyppeteer==1.0.2',
     ],
     entry_points={
@@ -33,7 +33,7 @@ setup(
     },
     extras_require={
         'headless': [
-            'pillow==9.2.0',
+            'pillow>=9.2.0, <=9.4.0',
             'pyzbar==0.1.9',
             'qrcode==7.3.1',
         ]

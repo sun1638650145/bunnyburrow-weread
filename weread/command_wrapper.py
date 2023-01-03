@@ -118,7 +118,7 @@ def help_command(level: Mode):
     _help_msg = """微信读书ePub下载工具
 
 Bunnyburrow Software Project(兔窝镇软件计划)
-Copyright 2022 Steve R. Sun. All rights reserved.
+Copyright 2022-2023 Steve R. Sun. All rights reserved.
 -------------------------------------------------
 Usage:
   weread-cli check [option] <rdata_file>

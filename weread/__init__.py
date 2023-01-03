@@ -1,9 +1,9 @@
 """微信读书ePub下载工具.
 
 Bunnyburrow Software Project(兔窝镇软件计划)
-Copyright 2022 Steve R. Sun. All rights reserved.
+Copyright 2022-2023 Steve R. Sun. All rights reserved.
 """
-__version__ = '0.1rc0'
+__version__ = '0.1.1b0'
 
 import logging
 # 设置系统logger.
